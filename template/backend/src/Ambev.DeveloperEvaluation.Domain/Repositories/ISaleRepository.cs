@@ -109,15 +109,12 @@ public interface ISaleRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Removes an item from an existing sale
+    /// Removes all item from an existing sale
     /// </summary>
-    /// <param name="saleId">The ID of the sale</param>
-    /// <param name="itemId">The ID of the item to remove</param>
+    /// <param name="sale">Existing sale</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>True if the item was removed, false otherwise</returns>
-    Task<bool> RemoveItemAsync(
-        Guid saleId,
-        Guid itemId,
+    Task RemoveItemsAsync(
+        Sale sale,
         CancellationToken cancellationToken = default);
 
     /// <summary>

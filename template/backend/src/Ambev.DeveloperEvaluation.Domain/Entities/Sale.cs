@@ -129,6 +129,7 @@ public class Sale : BaseEntity
 
         var item = new SaleItem
         {
+            Id = Guid.NewGuid(),
             Product = product,
             Quantity = quantity,
             UnitPrice = unitPrice,

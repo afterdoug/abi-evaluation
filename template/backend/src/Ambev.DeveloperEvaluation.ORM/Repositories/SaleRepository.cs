@@ -128,35 +128,14 @@ public class SaleRepository : ISaleRepository
     {
         _context.Entry(sale).State = EntityState.Modified;
 
-        // Handle items collection updates
         foreach (var item in sale.Items)
         {
-            if (item.Id == Guid.Empty)
-            {
-                // New item
-                _context.Entry(item).State = EntityState.Added;
-            }
-            else
-            {
-                // Existing item
-                _context.Entry(item).State = EntityState.Modified;
-            }
-        }
-
-        // Handle deleted items
-        var existingItems = await _context.Set<SaleItem>()
-            .Where(i => i.SaleId == sale.Id)
-            .ToListAsync(cancellationToken);
-
-        foreach (var existingItem in existingItems)
-        {
-            if (!sale.Items.Any(i => i.Id == existingItem.Id))
-            {
-                _context.Set<SaleItem>().Remove(existingItem);
-            }
+            item.SaleId = sale.Id;
+            _context.Set<SaleItem>().Add(item);
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
         return sale;
     }
 
@@ -227,27 +206,24 @@ public class SaleRepository : ISaleRepository
     }
 
     /// <summary>
-    /// Removes an item from an existing sale
+    /// Removes all item from an existing sale
     /// </summary>
-    /// <param name="saleId">The ID of the sale</param>
-    /// <param name="itemId">The ID of the item to remove</param>
+    /// <param name="sale">Existing sale</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>True if the item was removed, false otherwise</returns>
-    public async Task<bool> RemoveItemAsync(
-        Guid saleId,
-        Guid itemId,
+    public async Task RemoveItemsAsync(
+        Sale sale,
         CancellationToken cancellationToken = default)
     {
-        var sale = await GetByIdAsync(saleId, cancellationToken);
-        if (sale == null)
-            return false;
+        _context.Entry(sale).State = EntityState.Modified;
 
-        var result = sale.RemoveItem(itemId);
-        if (result)
-        {
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-        return result;
+        var existingItems = await _context.Set<SaleItem>()
+                .Where(i => i.SaleId == sale.Id)
+                .ToListAsync(cancellationToken);
+
+        existingItems.ForEach(i => _context.Entry(i).State = EntityState.Deleted);
+        sale.Items.Clear();
+
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>

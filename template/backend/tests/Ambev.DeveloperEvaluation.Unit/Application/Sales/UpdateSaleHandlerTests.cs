@@ -43,6 +43,8 @@ public class UpdateSaleHandlerTests
 
         _saleRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(existingSale);
+        _saleRepository.RemoveItemsAsync(existingSale, Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         _saleRepository.UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>())
             .Returns(updatedSale);
         _mapper.Map<UpdateSaleResult>(updatedSale).Returns(result);
@@ -56,6 +58,7 @@ public class UpdateSaleHandlerTests
         updateSaleResult.SaleNumber.Should().Be(command.SaleNumber);
         updateSaleResult.Customer.Should().Be(command.Customer);
         updateSaleResult.Branch.Should().Be(command.Branch);
+        await _saleRepository.Received(1).RemoveItemsAsync(existingSale, Arg.Any<CancellationToken>());
         await _saleRepository.Received(1).UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>());
     }
 
@@ -160,6 +163,8 @@ public class UpdateSaleHandlerTests
         Sale capturedSale = null;
         _saleRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(existingSale);
+        _saleRepository.RemoveItemsAsync(existingSale, Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         _saleRepository.UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>())
             .Returns(callInfo =>
             {
@@ -194,6 +199,8 @@ public class UpdateSaleHandlerTests
         Sale capturedSale = null;
         _saleRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(existingSale);
+        _saleRepository.RemoveItemsAsync(existingSale, Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         _saleRepository.UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>())
             .Returns(callInfo =>
             {
@@ -225,7 +232,7 @@ public class UpdateSaleHandlerTests
         var command = UpdateSaleHandlerTestData.GenerateCommandWithNewItem();
         var existingSale = UpdateSaleHandlerTestData.GenerateExistingSale(command.Id);
         var initialItemCount = existingSale.Items.Count;
-        
+
         foreach (var existingItem in existingSale.Items)
         {
             command.Items.Add(new UpdateSaleItemCommand
@@ -240,6 +247,8 @@ public class UpdateSaleHandlerTests
         Sale capturedSale = null;
         _saleRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(existingSale);
+        _saleRepository.RemoveItemsAsync(existingSale, Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         _saleRepository.UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>())
             .Returns(callInfo =>
             {
@@ -255,7 +264,7 @@ public class UpdateSaleHandlerTests
         // Then
         capturedSale.Should().NotBeNull();
         capturedSale.Items.Should().HaveCount(initialItemCount + 1);
-        capturedSale.Items.Should().Contain(i => i.Product == command.Items.First().Product);
+        capturedSale.Items.Should().Contain(i => i.Product == "New Product");
     }
 
     /// <summary>
@@ -272,6 +281,8 @@ public class UpdateSaleHandlerTests
         Sale capturedSale = null;
         _saleRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(existingSale);
+        _saleRepository.RemoveItemsAsync(existingSale, Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         _saleRepository.UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>())
             .Returns(callInfo =>
             {
@@ -303,6 +314,8 @@ public class UpdateSaleHandlerTests
         Sale capturedSale = null;
         _saleRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(existingSale);
+        _saleRepository.RemoveItemsAsync(existingSale, Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         _saleRepository.UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>())
             .Returns(callInfo =>
             {

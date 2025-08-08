@@ -39,7 +39,7 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
 
-        var existingSale = await _saleRepository.GetByIdAsync(command.Id, cancellationToken) 
+        var existingSale = await _saleRepository.GetByIdAsync(command.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Sale with ID {command.Id} not found");
 
         if (existingSale.IsCancelled)
@@ -57,6 +57,7 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
         existingSale.Customer = command.Customer;
         existingSale.Branch = command.Branch;
 
+        await _saleRepository.RemoveItemsAsync(existingSale, cancellationToken);
         UpdateSaleItems(existingSale, command.Items);
 
         var updatedSale = await _saleRepository.UpdateAsync(existingSale, cancellationToken);
@@ -67,39 +68,21 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
 
     private static void UpdateSaleItems(Sale sale, List<UpdateSaleItemCommand> itemCommands)
     {
-        var processedItemIds = new List<Guid>();
-
+        sale.Items.Clear();
         foreach (var itemCommand in itemCommands)
         {
-            if (itemCommand.Id.HasValue)
+            var newItem = new SaleItem
             {
-                var existingItem = sale.Items.FirstOrDefault(i => i.Id == itemCommand.Id.Value);
-                if (existingItem != null)
-                {
-                    existingItem.Product = itemCommand.Product;
-                    existingItem.Quantity = itemCommand.Quantity;
-                    existingItem.UnitPrice = itemCommand.UnitPrice;
+                Id = itemCommand.Id.HasValue && itemCommand.Id.Value != Guid.Empty
+                    ? itemCommand.Id.Value
+                    : Guid.NewGuid(),
+                Product = itemCommand.Product,
+                Quantity = itemCommand.Quantity,
+                UnitPrice = itemCommand.UnitPrice
+            };
 
-                    existingItem.ApplyQuantityBasedDiscount();
-
-                    processedItemIds.Add(existingItem.Id);
-                }
-                else
-                {
-                    sale.AddItem(itemCommand.Product, itemCommand.Quantity, itemCommand.UnitPrice);
-                }
-            }
-            else
-            {
-                var newItem = sale.AddItem(itemCommand.Product, itemCommand.Quantity, itemCommand.UnitPrice);
-                processedItemIds.Add(newItem.Id);
-            }
-        }
-
-        var itemsToRemove = sale.Items.Where(i => !processedItemIds.Contains(i.Id)).ToList();
-        foreach (var itemToRemove in itemsToRemove)
-        {
-            sale.RemoveItem(itemToRemove.Id);
+            newItem.ApplyQuantityBasedDiscount();
+            sale.Items.Add(newItem);
         }
 
         sale.CalculateTotalAmount();
