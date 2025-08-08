@@ -98,4 +98,10 @@ public static class SaleTestData
         item.CalculateTotalAmount();
         return item;
     }
+
+    /// <summary>
+    /// Generate a randon quantity with 10% discount.
+    /// </summary>
+    /// <returns>Randon quantity (4 to 10)</returns>
+    public static int QuantityDiscountRandon() => _faker.Random.Int(4, 9);
 }

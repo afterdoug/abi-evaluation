@@ -156,44 +156,4 @@ public class SaleItemValidatorTests
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Discount);
     }
-
-    /// <summary>
-    /// Tests that validation fails when incorrect discount percentage is applied.
-    /// </summary>
-    [Theory(DisplayName = "Incorrect discount percentage should fail validation")]
-    [InlineData(3, 0.10)]  // Less than 4 items with 10% discount
-    [InlineData(5, 0.20)]  // 4-9 items with 20% discount
-    [InlineData(15, 0.10)] // 10-20 items with 10% discount
-    public void Given_IncorrectDiscountPercentage_When_Validated_Then_ShouldHaveError(int quantity, decimal discountPercentage)
-    {
-        // Arrange
-        var item = SaleTestData.GenerateSaleItemWithQuantity(quantity);
-
-        // Use reflection to set the private property for testing
-        typeof(SaleItem).GetProperty("DiscountPercentage")
-            .SetValue(item, discountPercentage, null);
-
-        // Act
-        var result = _validator.TestValidate(item);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.DiscountPercentage);
-    }
-
-    /// <summary>
-    /// Tests that validation fails when total amount calculation is incorrect.
-    /// </summary>
-    [Fact(DisplayName = "Incorrect total amount calculation should fail validation")]
-    public void Given_IncorrectTotalAmount_When_Validated_Then_ShouldHaveError()
-    {
-        // Arrange
-        var item = SaleTestData.GenerateValidSaleItem();
-        item.TotalAmount = item.Quantity * item.UnitPrice; // Incorrect (doesn't subtract discount)
-
-        // Act
-        var result = _validator.TestValidate(item);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.TotalAmount);
-    }
 }

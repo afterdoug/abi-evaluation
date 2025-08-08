@@ -7,7 +7,7 @@ using FluentAssertions;
 using NSubstitute;
 using Xunit;
 
-namespace Ambev.DeveloperEvaluation.Unit.Application;
+namespace Ambev.DeveloperEvaluation.Unit.Application.Sales;
 
 /// <summary>
 /// Contains unit tests for the <see cref="GetSaleHandler"/> class.

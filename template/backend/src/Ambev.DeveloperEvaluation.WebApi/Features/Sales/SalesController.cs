@@ -4,7 +4,7 @@ using AutoMapper;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
-//using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 //using Ambev.DeveloperEvaluation.Application.Sales.CancelSale;
 //using Ambev.DeveloperEvaluation.Application.Sales.GetSalesByCustomer;
 //using Ambev.DeveloperEvaluation.Application.Sales.GetSalesByDateRange;
@@ -16,7 +16,7 @@ using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 //using Ambev.DeveloperEvaluation.Application.Sales.UpdateSaleItemQuantity;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
-//using Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 //using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CancelSale;
 //using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSalesByCustomer;
 //using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSalesByDateRange;
@@ -103,68 +103,33 @@ public class SalesController : BaseController
         return Ok(_mapper.Map<GetSaleResponse>(response));
     }
 
-    ///// <summary>
-    ///// Retrieves a sale by its sale number
-    ///// </summary>
-    ///// <param name="saleNumber">The sale number</param>
-    ///// <param name="cancellationToken">Cancellation token</param>
-    ///// <returns>The sale details if found</returns>
-    //[HttpGet("by-number/{saleNumber}")]
-    //[ProducesResponseType(typeof(ApiResponseWithData<GetSaleResponse>), StatusCodes.Status200OK)]
-    //[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-    //[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-    //public async Task<IActionResult> GetSaleBySaleNumber([FromRoute] string saleNumber, CancellationToken cancellationToken)
-    //{
-    //    var request = new GetSaleBySaleNumberRequest { SaleNumber = saleNumber };
-    //    var validator = new GetSaleBySaleNumberRequestValidator();
-    //    var validationResult = await validator.ValidateAsync(request, cancellationToken);
+    /// <summary>
+    /// Updates an existing sale
+    /// </summary>
+    /// <param name="id">The unique identifier of the sale</param>
+    /// <param name="request">The sale update request</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The updated sale details</returns>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(ApiResponseWithData<UpdateSaleResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateSale([FromRoute] Guid id, [FromBody] UpdateSaleRequest request, CancellationToken cancellationToken)
+    {
+        if (id != request.Id)
+            return BadRequest("ID in route must match ID in request body");
 
-    //    if (!validationResult.IsValid)
-    //        return BadRequest(validationResult.Errors);
+        var validator = new UpdateSaleRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
-    //    var command = _mapper.Map<GetSaleBySaleNumberCommand>(request);
-    //    var response = await _mediator.Send(command, cancellationToken);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
 
-    //    return Ok(new ApiResponseWithData<GetSaleResponse>
-    //    {
-    //        Success = true,
-    //        Message = "Sale retrieved successfully",
-    //        Data = _mapper.Map<GetSaleResponse>(response)
-    //    });
-    //}
+        var command = _mapper.Map<UpdateSaleCommand>(request);
+        var response = await _mediator.Send(command, cancellationToken);
 
-    ///// <summary>
-    ///// Updates an existing sale
-    ///// </summary>
-    ///// <param name="id">The unique identifier of the sale</param>
-    ///// <param name="request">The sale update request</param>
-    ///// <param name="cancellationToken">Cancellation token</param>
-    ///// <returns>The updated sale details</returns>
-    //[HttpPut("{id}")]
-    //[ProducesResponseType(typeof(ApiResponseWithData<UpdateSaleResponse>), StatusCodes.Status200OK)]
-    //[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-    //[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-    //public async Task<IActionResult> UpdateSale([FromRoute] Guid id, [FromBody] UpdateSaleRequest request, CancellationToken cancellationToken)
-    //{
-    //    if (id != request.Id)
-    //        return BadRequest("ID in route must match ID in request body");
-
-    //    var validator = new UpdateSaleRequestValidator();
-    //    var validationResult = await validator.ValidateAsync(request, cancellationToken);
-
-    //    if (!validationResult.IsValid)
-    //        return BadRequest(validationResult.Errors);
-
-    //    var command = _mapper.Map<UpdateSaleCommand>(request);
-    //    var response = await _mediator.Send(command, cancellationToken);
-
-    //    return Ok(new ApiResponseWithData<UpdateSaleResponse>
-    //    {
-    //        Success = true,
-    //        Message = "Sale updated successfully",
-    //        Data = _mapper.Map<UpdateSaleResponse>(response)
-    //    });
-    //}
+        return Ok(_mapper.Map<UpdateSaleResponse>(response));
+    }
 
     ///// <summary>
     ///// Cancels a sale by its ID
