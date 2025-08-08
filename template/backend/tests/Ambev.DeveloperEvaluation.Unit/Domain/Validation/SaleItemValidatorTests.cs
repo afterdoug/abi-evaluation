@@ -188,13 +188,12 @@ public class SaleItemValidatorTests
     {
         // Arrange
         var item = SaleTestData.GenerateValidSaleItem();
-        item.Quantity = 14;
         item.TotalAmount = item.Quantity * item.UnitPrice; // Incorrect (doesn't subtract discount)
 
         // Act
         var result = _validator.TestValidate(item);
 
         // Assert
-        result.ShouldHaveValidationErrorFor(x => x.DiscountPercentage);
+        result.ShouldHaveValidationErrorFor(x => x.TotalAmount);
     }
 }
