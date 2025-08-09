@@ -3,6 +3,7 @@ using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
 using FluentAssertions;
+using MediatR;
 using NSubstitute;
 using Xunit;
 
@@ -16,6 +17,7 @@ public class CancelSaleHandlerTests
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
     private readonly CancelSaleHandler _handler;
+    private readonly IMediator _mediator;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CancelSaleHandlerTests"/> class.
@@ -25,7 +27,8 @@ public class CancelSaleHandlerTests
     {
         _saleRepository = Substitute.For<ISaleRepository>();
         _mapper = Substitute.For<IMapper>();
-        _handler = new CancelSaleHandler(_saleRepository, _mapper);
+        _mediator = Substitute.For<IMediator>();
+        _handler = new CancelSaleHandler(_saleRepository, _mapper, _mediator);
     }
 
     /// <summary>

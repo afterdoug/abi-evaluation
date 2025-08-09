@@ -1,4 +1,5 @@
-﻿using Ambev.DeveloperEvaluation.Domain.Entities;
+﻿using Ambev.DeveloperEvaluation.Application.Sales.Events;
+using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
 using FluentValidation;
@@ -14,6 +15,7 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
     private readonly ISaleRepository _saleRepository;
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
+    private readonly IMediator _mediator;
 
     /// <summary>
     /// Initializes a new instance of CreateSaleHandler
@@ -21,11 +23,13 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
     /// <param name="saleRepository">The sale repository</param>
     /// <param name="userRepository">The user repository</param>
     /// <param name="mapper">The AutoMapper instance</param>
-    public CreateSaleHandler(ISaleRepository saleRepository, IUserRepository userRepository, IMapper mapper)
+    /// <param name="mediator">The mediator to handle event</param>
+    public CreateSaleHandler(ISaleRepository saleRepository, IUserRepository userRepository, IMapper mapper, IMediator mediator)
     {
         _saleRepository = saleRepository;
         _userRepository = userRepository;
         _mapper = mapper;
+        _mediator = mediator;
     }
 
     /// <summary>
@@ -42,17 +46,14 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
 
-        // Check if sale number already exists
         var existingSale = await _saleRepository.GetBySaleNumberAsync(command.SaleNumber, cancellationToken);
         if (existingSale != null)
             throw new InvalidOperationException($"Sale with number {command.SaleNumber} already exists");
 
-        // Check if user exists
         var user = await _userRepository.GetByIdAsync(command.CreatedById, cancellationToken);
         if (user == null)
             throw new InvalidOperationException($"User with ID {command.CreatedById} not found");
 
-        // Create sale entity
         var sale = new Sale
         {
             SaleNumber = command.SaleNumber,
@@ -63,16 +64,15 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
             CreatedBy = user
         };
 
-        // Add items to sale
         foreach (var itemCommand in command.Items)
         {
             sale.AddItem(itemCommand.Product, itemCommand.Quantity, itemCommand.UnitPrice);
         }
 
-        // Save sale to repository
         var createdSale = await _saleRepository.CreateAsync(sale, cancellationToken);
 
-        // Map to result
+        await _mediator.Publish(new SaleCreatedEvent(createdSale.Id), cancellationToken);
+
         var result = _mapper.Map<CreateSaleResult>(createdSale);
         return result;
     }

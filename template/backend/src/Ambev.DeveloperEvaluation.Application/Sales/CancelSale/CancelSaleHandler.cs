@@ -1,4 +1,5 @@
-﻿using Ambev.DeveloperEvaluation.Domain.Repositories;
+﻿using Ambev.DeveloperEvaluation.Application.Sales.Events;
+using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
 using MediatR;
 
@@ -11,16 +12,19 @@ public class CancelSaleHandler : IRequestHandler<CancelSaleCommand, CancelSaleRe
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
+    private readonly IMediator _mediator;
 
     /// <summary>
     /// Initializes a new instance of CancelSaleHandler
     /// </summary>
     /// <param name="saleRepository">The sale repository</param>
     /// <param name="mapper">The AutoMapper instance</param>
-    public CancelSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+    /// <param name="mediator">The mediator instance</param>
+    public CancelSaleHandler(ISaleRepository saleRepository, IMapper mapper, IMediator mediator)
     {
         _saleRepository = saleRepository;
         _mapper = mapper;
+        _mediator = mediator;
     }
 
     /// <summary>
@@ -38,6 +42,8 @@ public class CancelSaleHandler : IRequestHandler<CancelSaleCommand, CancelSaleRe
             throw new InvalidOperationException("Sale is already cancelled");
 
         await _saleRepository.CancelAsync(command.Id, cancellationToken);
+
+        await _mediator.Publish(new SaleCancelledEvent(command.Id), cancellationToken);
 
         var result = _mapper.Map<CancelSaleResult>(sale);
         return result;
